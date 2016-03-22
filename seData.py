@@ -7,7 +7,7 @@ from seCommands import *
 from seDataParams import *
 
 # parse the message data
-def parseData(function, data):
+def parseData(function, data, command=0x0):
     if function == 0:
         # message was too short to be valid
         debug("debugEnable", "Message too short")
@@ -15,11 +15,16 @@ def parseData(function, data):
     elif function in [PROT_RESP_ACK, PROT_RESP_NACK, PROT_CMD_MISC_GET_VER,
                       PROT_CMD_MISC_GET_TYPE, PROT_CMD_SERVER_GET_GMT,
                       PROT_CMD_SERVER_GET_NAME, PROT_CMD_POLESTAR_GET_STATUS,
-                      PROT_CMD_POLESTAR_MASTER_GRANT, PROT_RESP_POLESTAR_MASTER_GRANT_ACK]:
+                      PROT_CMD_POLESTAR_MASTER_GRANT, PROT_RESP_POLESTAR_MASTER_GRANT_ACK,
+			PROT_CMD_POLESTAR_GET_S_OK_STATUS, PROT_CMD_POLESTAR_GET_OPMODE]:
         # functions with no arguments
+	if command == PROT_CMD_POLESTAR_GET_OPMODE:
+		return parseOpMode(data)
         pass
     elif function == PROT_CMD_SERVER_POST_DATA:
         return parseDeviceData(data)
+    elif function == PROT_RESP_POLESTAR_GET_S_OK_STATUS:
+        return parseSOKStatus(data)
     elif function == PROT_RESP_POLESTAR_GET_STATUS:
         return parseStatus(data)
     elif function in [PROT_CMD_PARAMS_GET_SINGLE, PROT_CMD_UPGRADE_START]:
@@ -45,6 +50,16 @@ def parseData(function, data):
         # unknown function type
         raise Exception("Unknown function 0x%04x" % function)
     return {}
+
+def parseOpMode(data):
+    opmode = struct.unpack("<i", data)[0]
+    debug("debugData", "opmode:     ", "%d" % opmode, " - ", operationmodeDict[str(opmode)])
+    return {"opmode": operationmodeDict[str(opmode)]}
+
+def parseSOKStatus(data):
+    sokstatus = struct.unpack("<H", data)[0]
+    debug("debugData", "sokstatus:     ", "%d" % sokstatus, " - ", sokstatusDict[str(sokstatus)])
+    return {"sokstatus": sokstatusDict[str(sokstatus)]}
 
 def parseParam(data):
     param = struct.unpack("<H", data)[0]

@@ -97,7 +97,7 @@ def masterCommands(dataFile, recFile):
 
 # perform the specified commands
 def doCommands(dataFile, commands, recFile):
-    global dataInSeq, dataOutSeq
+    global dataInSeq, dataOutSeq, outSeq
     slaveAddr = int(slaveAddrs[0], 16)
     for command in commands:
         # format the command parameters
@@ -109,7 +109,8 @@ def doCommands(dataFile, commands, recFile):
         # wait for the response
         (msg, dataInSeq) = readMsg(dataFile, dataInSeq, recFile)
         (msgSeq, fromAddr, toAddr, function, data) = parseMsg(msg)
-        msgData = parseData(function, data)
+        msgData = parseData(function, data, int(command[0],16))
+	outSeq = writeData(msgData, outFile, outSeq)
         # wait a bit before sending the next one                    
         time.sleep(commandDelay)
 
